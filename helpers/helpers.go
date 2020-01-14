@@ -28,7 +28,7 @@ func LoadConfig() appConfig {
 	box := packr.NewBox(configPath)
 	err := config.Load(box, &c)
 	if err != nil {
-		log.Panic("unable to load config")
+		log.Panic("Unable to load config", err)
 	}
 
 	return c
@@ -38,7 +38,7 @@ func FindRootPath() string {
 	current, err := here.Current()
 
 	if err != nil {
-		log.Info("Unable to find root of your project.")
+		log.Info("Unable to find root of your project.", err)
 		return "."
 	}
 	return current.Dir
