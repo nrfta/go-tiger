@@ -19,15 +19,30 @@ read the `JSON` files.
 
 ### CLI
 
+Available Commands:
+
+```
+  db          Database related operations
+  generate    Generate files
+  help        Help about any command
+  task        Run grift tasks
+```
+
+#### Tasks
+
+Run [grift](https://github.com/markbates/grift/) tasks.
+
 #### DB
 
 Available Commands:
 
-| command | description                 |
-|---------|-----------------------------|
-| create  | Create database             |
-| drop    | Drop database               |
-| migrate | Execute database migrations |
+| command | description                      |
+|---------|----------------------------------|
+| create  | Create database                  |
+| drop    | Drop database                    |
+| migrate | Execute database migrations      |
+| reset   | Runs drop, create and migrate up |
+| seed    | Runs grift task db:seed          |
 
 Create the development database:
 
