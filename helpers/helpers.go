@@ -43,7 +43,7 @@ func FindRootPath() string {
 	current, err := here.Current()
 
 	if err != nil {
-		log.Info("Unable to find root of your project.", err)
+		log.Infof("Unable to find root of your project. Using current working directory (%s) instead.", currentPath)
 
 		return currentPath
 	}
