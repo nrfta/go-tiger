@@ -35,11 +35,22 @@ func LoadConfig() appConfig {
 }
 
 func FindRootPath() string {
+	currentPath, err := os.Getwd()
+	if err != nil {
+		log.Panic("Unable to find current working path")
+	}
+
 	current, err := here.Current()
 
 	if err != nil {
 		log.Info("Unable to find root of your project.", err)
-		return "."
+
+		return currentPath
 	}
+
+	if current.Dir == "." {
+		return currentPath
+	}
+
 	return current.Dir
 }
