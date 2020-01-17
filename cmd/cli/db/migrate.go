@@ -21,14 +21,23 @@ func setupMigrate() *migrate.Migrate {
 		log.Fatal(errors.Wrap(err, "migrate unable to connect to postgres instance"))
 	}
 
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	migrationsTable := "schema_migrations"
+
+	if len(pgConfig.MigrationsTable) > 0 {
+		migrationsTable = pgConfig.MigrationsTable
+	}
+
+	driver, err := postgres.WithInstance(db, &postgres.Config{
+		DatabaseName:    pgConfig.Database,
+		MigrationsTable: migrationsTable,
+	})
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "migrate unable to connect to postgres instance"))
 	}
 
 	migrateInstance, err := migrate.NewWithDatabaseInstance(
 		"file:"+helpers.FindRootPath()+"/db/migrations",
-		"postgres",
+		pgConfig.Database,
 		driver,
 	)
 
