@@ -9,8 +9,8 @@ require (
 	github.com/lib/pq v1.3.0
 	github.com/markbates/grift v1.5.0
 	github.com/neighborly/go-config v0.2.1
-	github.com/neighborly/go-errors v0.1.1
-	github.com/neighborly/go-pghelpers v0.3.2
+	github.com/neighborly/go-errors v0.2.0
+	github.com/neighborly/go-pghelpers v0.4.0
 	github.com/nrfta/go-log v0.0.0-20200111010408-b08d9985f078
 	github.com/spf13/cobra v0.0.5
 )
