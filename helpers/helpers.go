@@ -8,12 +8,14 @@ import (
 	"github.com/gobuffalo/packr"
 	"github.com/neighborly/go-config"
 	"github.com/neighborly/go-pghelpers"
+	amConfig "github.com/nrfta/go-access-management/config"
 	"github.com/nrfta/go-log"
 )
 
 type appConfig struct {
 	Meta             config.MetaConfig
-	PostgresDatabase pghelpers.PostgresConfig `mapstructure:"postgres"`
+	PostgresDatabase pghelpers.PostgresConfig        `mapstructure:"postgres"`
+	AccessManagement amConfig.AccessManagementConfig `mapstructure:"access_management"`
 }
 
 func LoadConfig() appConfig {

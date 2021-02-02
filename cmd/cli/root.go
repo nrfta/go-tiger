@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/nrfta/go-log"
+	"github.com/nrfta/go-tiger/cmd/cli/am"
 	"github.com/nrfta/go-tiger/cmd/cli/db"
 	"github.com/nrfta/go-tiger/cmd/cli/generator"
 )
@@ -26,4 +27,5 @@ func Execute() {
 func init() {
 	RootCmd.AddCommand(db.DBCmd)
 	RootCmd.AddCommand(generator.GenerateCmd)
+	RootCmd.AddCommand(am.AMCmd)
 }
