@@ -53,49 +53,23 @@ import (
 )
 
 var (
-  migrations = make(policyMigration.Migrations)
+  Migrations = make(policyMigration.Migrations)
 )
 
 // MigrateUp runs the security policy up migrations from the next version to the last version.
 func MigrateUp() error {
-	op := policyMigration.NewOperation(migrations, config.Config.Security)
+	op := policyMigration.NewOperation(Migrations, config.Config.Security)
 	return op.Up()
 }
 
 // MigrationDown runs the security policy down migration for the current version.
 func MigrateDown() error {
-	op := policyMigration.NewOperation(migrations, config.Config.Security)
+	op := policyMigration.NewOperation(Migrations, config.Config.Security)
 	return op.Down()
 }
 `
 
-var policyMigrationCmd = &cobra.Command{
-	Use:   "policyMigration [platform security policy version] [policyID,policyID,...] [description]",
-	Short: "Generates a security policy migration file",
-	Args:  cobra.ExactArgs(3),
-	Run: func(cmd *cobra.Command, args []string) {
-		t := time.Now()
-		timestamp := t.Format("20060102150405")
-		policyIDs := strings.Split(args[1], ",")
-		policyIDsStr := `"` + strings.Join(policyIDs, `", "`) + `"`
-		description := strings.ReplaceAll(args[2], " ", "_")
-		name := args[1] + "_" + description
-		rootPath := helpers.FindRootPath()
-		baseFileName := path.Join(rootPath, "./db/policy/"+timestamp+"_"+name)
-
-		cfg := helpers.LoadConfig()
-		serviceName := cfg.Meta.ServiceName
-
-		if err := ensureMigrationsFileExists(path.Join(rootPath, "./db/policy/0_migrations.go"), serviceName); err != nil {
-			log.Error(err)
-			return
-		}
-		if err := ensureGriftFileExists(path.Join(rootPath, "./grifts/policy.go"), serviceName); err != nil {
-			log.Error(err)
-			return
-		}
-
-		content := fmt.Sprintf(`package dbPolicy
+const migrationFileContent = `package dbPolicy
 
 import (
 	"errors"
@@ -104,7 +78,7 @@ import (
 )
 
 func init() {
-	migrations[%s] = &policyMigration.Migration{
+	Migrations[%s] = &policyMigration.Migration{
 		Version:       %s,
 		PolicyVersion: "%s",
 		PolicyIDs:     []string{%s},
@@ -123,15 +97,140 @@ func migration%sDown(policyVersion string) error {
 	// migrate up implementation
 	return errors.New("not implemented")
 }
-`, timestamp, timestamp, args[0], policyIDsStr, args[2], timestamp, timestamp, timestamp, timestamp)
+`
 
+const testSuiteFileContent = `package dbPolicy_test
+
+import (
+	"strconv"
+	"testing"
+
+	dbPkg "github.com/nrfta/%s/db"
+	"github.com/nrfta/%s/tests"
+	amTests "github.com/nrfta/go-access-management/v3/tests"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+func TestPolicyMigrations(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Policy Migrations Suite")
+}
+
+var _ = BeforeSuite(func() {
+	amTests.CreateDB()
+
+})
+
+var (
+	DB dbPkg.DB
+)
+
+func openDB() {
+	// Gets current test to create a unique identifier
+	test := CurrentGinkgoTestDescription()
+	id := test.FileName + ":" + strconv.Itoa(test.LineNumber)
+
+	// Creates a new DB connection with a empty database for each test
+	DB = tests.NewDBConnection(id)
+	tests.InitializeAccessManagement()
+}
+
+func closeDB() {
+	if DB != nil {
+		DB.Close()
+	}
+	amTests.Finalize()
+}
+
+var _ = BeforeSuite(func() {
+	tests.ResetAccessManagementPolicies()
+	openDB()
+})
+var _ = AfterSuite(closeDB)
+var _ = BeforeEach(openDB)
+var _ = AfterEach(closeDB)
+`
+
+const testFileContent = `package dbPolicy_test
+
+import (
+	dbPolicy "github.com/nrfta/%s/db/policy"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+var _ = Describe("%s", func() {
+	migrationVersion := int64(%s)
+	migration := dbPolicy.Migrations[migrationVersion]
+	Expect(migration.Version).To(Equal(migrationVersion))
+
+	Context("Up", func() {
+		It("should migrate up and apply correct policies", func() {
+			Expect(false).To(BeTrue(), "policy migration tests are required")
+		})
+	})
+
+	Context("Down", func() {
+		It("should migrate down and revoke correct policies", func() {
+			Expect(false).To(BeTrue(), "policy migration tests are required")
+		})
+	})
+})
+`
+
+
+var policyMigrationCmd = &cobra.Command{
+	Use:   "policyMigration [platform security policy version] [policyID,policyID,...] [description]",
+	Short: "Generates a security policy migration file",
+	Args:  cobra.ExactArgs(3),
+	Run: func(cmd *cobra.Command, args []string) {
+		t := time.Now()
+		timestamp := t.Format("20060102150405")
+		policyIDs := strings.Split(args[1], ",")
+		policyIDsStr := `"` + strings.Join(policyIDs, `", "`) + `"`
+		description := strings.ReplaceAll(args[2], " ", "_")
+		name := args[1] + "_" + description
+		rootPath := helpers.FindRootPath()
+		baseDir := path.Join(rootPath, "db/policy")
+		baseFileName := path.Join(baseDir, timestamp+"_"+name)
+
+		cfg := helpers.LoadConfig()
+		serviceName := cfg.Meta.ServiceName
+
+		if err := ensureMigrationsFileExists(path.Join(rootPath, "./db/policy/0_migrations.go"), serviceName); err != nil {
+			log.Error(err)
+			return
+		}
+		if err := ensureTestSuiteFileExists(path.Join(rootPath, "./db/policy/0_migrations_suite_test.go"), serviceName); err != nil {
+			log.Error(err)
+			return
+		}
+		if err := ensureGriftFileExists(path.Join(rootPath, "./grifts/policy.go"), serviceName); err != nil {
+			log.Error(err)
+			return
+		}
+
+		content := fmt.Sprintf(migrationFileContent, timestamp, timestamp, args[0], policyIDsStr, args[2], timestamp,
+			timestamp, timestamp, timestamp)
 		err := writeFile(baseFileName+".go", content)
 		if err != nil {
 			log.Error(err)
 			return
 		}
-
 		fmt.Println(baseFileName + ".go created")
+
+		testContent := fmt.Sprintf(testFileContent, serviceName, timestamp, timestamp)
+		testFilePath := path.Join(baseDir, timestamp+"_test.go")
+		err = writeFile(testFilePath, testContent)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+
+		fmt.Println(testFilePath + " created")
 	},
 }
 
@@ -163,6 +262,20 @@ func ensureGriftFileExists(fileName, serviceName string) error {
 	_, err := os.Stat(fileName)
 	if os.IsNotExist(err) {
 		return writeFile(fileName, fmt.Sprintf(griftFileContent, serviceName))
+	}
+	return nil
+}
+
+func ensureTestSuiteFileExists(fileName, serviceName string) error {
+	dir := path.Dir(fileName)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	}
+	_, err := os.Stat(fileName)
+	if os.IsNotExist(err) {
+		return writeFile(fileName, fmt.Sprintf(testSuiteFileContent, serviceName, serviceName))
 	}
 	return nil
 }
