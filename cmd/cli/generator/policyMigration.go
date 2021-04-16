@@ -12,9 +12,43 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const griftFileContent = `package grifts
+
+import (
+	"fmt"
+	"os"
+	"strings"
+
+	dbPolicy "github.com/nrfta/%s/db/policy"
+	. "github.com/markbates/grift/grift"
+)
+
+const (
+	up   = "up"
+	down = "down"
+)
+
+var _ = Namespace("policy", func() {
+	Desc("migrate", "migrate accounts-api access management")
+	Add("migrate", func(c *Context) error {
+		if len(c.Args) != 1 || (strings.ToLower(c.Args[0]) != up && strings.ToLower(c.Args[0]) != down) {
+			fmt.Println("Usage: policy:migrate [up|down]")
+			os.Exit(1)
+		}
+
+		isUp := strings.ToLower(c.Args[0]) == up
+		if isUp {
+			return dbPolicy.MigrateUp()
+		}
+		return dbPolicy.MigrateDown()
+	})
+})
+`
+
 const mainPolicyFileContent = `package dbPolicy
 
 import (
+	"github.com/nrfta/%s/config"
   policyMigration "github.com/nrfta/go-platform-security-policy-migration/pkg/policy_migration"
 )
 
@@ -22,11 +56,13 @@ var (
   migrations = make(policyMigration.Migrations)
 )
 
+// MigrateUp runs the security policy up migrations from the next version to the last version.
 func MigrateUp() error {
 	op := policyMigration.NewOperation(migrations, config.Config.Security)
 	return op.Up()
 }
 
+// MigrationDown runs the security policy down migration for the current version.
 func MigrateDown() error {
 	op := policyMigration.NewOperation(migrations, config.Config.Security)
 	return op.Down()
@@ -44,9 +80,17 @@ var policyMigrationCmd = &cobra.Command{
 		policyIDsStr := `"` + strings.Join(policyIDs, `", "`) + `"`
 		description := strings.ReplaceAll(args[2], " ", "_")
 		name := args[1] + "_" + description
-		baseFileName := path.Join(helpers.FindRootPath(), "./db/policy/"+timestamp+"_"+name)
+		rootPath := helpers.FindRootPath()
+		baseFileName := path.Join(rootPath, "./db/policy/"+timestamp+"_"+name)
 
-		if err := ensureMigrationsFileExists(path.Join(helpers.FindRootPath(), "./db/policy/(migrations).go")); err != nil {
+		cfg := helpers.LoadConfig()
+		serviceName := cfg.Meta.ServiceName
+
+		if err := ensureMigrationsFileExists(path.Join(rootPath, "./db/policy/(migrations).go"), serviceName); err != nil {
+			log.Error(err)
+			return
+		}
+		if err := ensureGriftFileExists(path.Join(rootPath, "./grifts/policy.go"), serviceName); err != nil {
 			log.Error(err)
 			return
 		}
@@ -95,10 +139,30 @@ func init() {
 	GenerateCmd.AddCommand(policyMigrationCmd)
 }
 
-func ensureMigrationsFileExists(path string) error {
-	_, err := os.Stat(path)
+func ensureMigrationsFileExists(fileName, serviceName string) error {
+	dir := path.Dir(fileName)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	}
+	_, err := os.Stat(fileName)
 	if os.IsNotExist(err) {
-		return writeFile(path, mainPolicyFileContent)
+		return writeFile(fileName, fmt.Sprintf(mainPolicyFileContent, serviceName))
+	}
+	return nil
+}
+
+func ensureGriftFileExists(fileName, serviceName string) error {
+	dir := path.Dir(fileName)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	}
+	_, err := os.Stat(fileName)
+	if os.IsNotExist(err) {
+		return writeFile(fileName, fmt.Sprintf(griftFileContent, serviceName))
 	}
 	return nil
 }
