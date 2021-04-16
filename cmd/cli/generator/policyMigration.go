@@ -118,11 +118,6 @@ func TestPolicyMigrations(t *testing.T) {
 	RunSpecs(t, "Policy Migrations Suite")
 }
 
-var _ = BeforeSuite(func() {
-	amTests.CreateDB()
-
-})
-
 var (
 	DB dbPkg.DB
 )
@@ -164,7 +159,8 @@ import (
 
 var _ = Describe("%s", func() {
 	migrationVersion := int64(%s)
-	migration := dbPolicy.Migrations[migrationVersion]
+	migration, ok := dbPolicy.Migrations[migrationVersion]
+	Expect(ok).To(BeTrue())
 	Expect(migration.Version).To(Equal(migrationVersion))
 
 	Context("Up", func() {
