@@ -165,12 +165,16 @@ var _ = Describe("%s", func() {
 
 	Context("Up", func() {
 		It("should migrate up and apply correct policies", func() {
+			// err := migration.Up(migration.PolicyVersion)
+			// Expect(err).To(BeNil())
 			Expect(false).To(BeTrue(), "policy migration tests are required")
 		})
 	})
 
 	Context("Down", func() {
 		It("should migrate down and revoke correct policies", func() {
+			// err := migration.Down(migration.PolicyVersion)
+			// Expect(err).To(BeNil())
 			Expect(false).To(BeTrue(), "policy migration tests are required")
 		})
 	})
