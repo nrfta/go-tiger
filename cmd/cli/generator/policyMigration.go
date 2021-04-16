@@ -86,7 +86,7 @@ var policyMigrationCmd = &cobra.Command{
 		cfg := helpers.LoadConfig()
 		serviceName := cfg.Meta.ServiceName
 
-		if err := ensureMigrationsFileExists(path.Join(rootPath, "./db/policy/(migrations).go"), serviceName); err != nil {
+		if err := ensureMigrationsFileExists(path.Join(rootPath, "./db/policy/0_migrations.go"), serviceName); err != nil {
 			log.Error(err)
 			return
 		}
