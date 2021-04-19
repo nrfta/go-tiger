@@ -49,24 +49,41 @@ const mainPolicyFileContent = `package dbPolicy
 
 import (
 	"github.com/nrfta/%s/config"
-  policyMigration "github.com/nrfta/go-platform-security-policy-migration/pkg/policy_migration"
+	dbPkg "github.com/nrfta/%s/db"
+	policyMigration "github.com/nrfta/go-platform-security-policy-migration/pkg/policy_migration"
 )
 
 var (
+	DB dbPkg.DB
   Migrations = make(policyMigration.Migrations)
 )
 
 // MigrateUp runs the security policy up migrations from the next version to the last version.
 func MigrateUp() error {
+	openDB()
+	defer closeDB()
 	op := policyMigration.NewOperation(Migrations, config.Config.Security)
 	return op.Up()
 }
 
 // MigrationDown runs the security policy down migration for the current version.
 func MigrateDown() error {
+	openDB()
+	defer closeDB()
 	op := policyMigration.NewOperation(Migrations, config.Config.Security)
 	return op.Down()
 }
+
+func openDB() {
+	DB = dbPkg.NewDBConnection(config.Config.PostgresDatabase)
+}
+
+func closeDB() {
+	if DB != nil {
+		DB.Close()
+	}
+}
+
 `
 
 const migrationFileContent = `package dbPolicy
@@ -129,7 +146,8 @@ func openDB() {
 
 	// Creates a new DB connection with a empty database for each test
 	DB = tests.NewDBConnection(id)
-	tests.InitializeAccessManagement()
+	dbPolicy.DB = DB
+	tests.ResetAccessManagementPolicies()
 }
 
 func closeDB() {
@@ -139,10 +157,7 @@ func closeDB() {
 	amTests.Finalize()
 }
 
-var _ = BeforeSuite(func() {
-	tests.ResetAccessManagementPolicies()
-	openDB()
-})
+var _ = BeforeSuite(openDB)
 var _ = AfterSuite(closeDB)
 var _ = BeforeEach(openDB)
 var _ = AfterEach(closeDB)
@@ -247,7 +262,7 @@ func ensureMigrationsFileExists(fileName, serviceName string) error {
 	}
 	_, err := os.Stat(fileName)
 	if os.IsNotExist(err) {
-		return writeFile(fileName, fmt.Sprintf(mainPolicyFileContent, serviceName))
+		return writeFile(fileName, fmt.Sprintf(mainPolicyFileContent, serviceName, serviceName))
 	}
 	return nil
 }
