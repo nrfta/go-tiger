@@ -6,6 +6,7 @@ import (
 	"github.com/nrfta/go-log"
 	"github.com/nrfta/go-tiger/cmd/cli/db"
 	"github.com/nrfta/go-tiger/cmd/cli/generator"
+	"github.com/nrfta/go-tiger/cmd/cli/start"
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -24,6 +25,7 @@ func Execute() {
 }
 
 func init() {
+	RootCmd.AddCommand(start.StartCmd)
 	RootCmd.AddCommand(db.DBCmd)
 	RootCmd.AddCommand(generator.GenerateCmd)
 }
