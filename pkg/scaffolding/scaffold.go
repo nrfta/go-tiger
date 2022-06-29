@@ -33,6 +33,7 @@ func Process(rootPath, filePath string) {
 	}
 
 	g.CreatePkg()
+	g.CreateFactory()
 }
 
 type Data struct {
@@ -90,13 +91,46 @@ func (g *Generator) CreatePkg() {
 				g.Data.PkgName,
 			)
 
-			err = os.WriteFile(path.Join(pkgPath, destFileName), []byte(*rendered), 0755)
+			err = os.WriteFile(
+				path.Join(pkgPath, destFileName),
+				[]byte(*rendered),
+				os.ModePerm,
+			)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 	}
+}
 
+func (g *Generator) CreateFactory() {
+	content, err := blueprints.F.ReadFile("misc/factory.go.tpl")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rendered, err := renderTemplate(
+		"factory.go",
+		string(content),
+		g.Data,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = os.WriteFile(
+		path.Join(
+			g.Root,
+			"tests",
+			"factories",
+			strcase.ToSnake(g.Data.Name)+".go",
+		),
+		[]byte(*rendered),
+		os.ModePerm,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func getModuleName(rootPath string) string {
