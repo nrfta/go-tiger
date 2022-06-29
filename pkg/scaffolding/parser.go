@@ -6,25 +6,14 @@ import (
 	"go/token"
 
 	"github.com/nrfta/go-log"
-	"github.com/volatiletech/inflect"
 )
-
-type inflected struct {
-	Sigular string
-	Plural  string
-}
 
 type fieldDef struct {
 	Name string
 	Type string
 }
 
-type ModelDef struct {
-	Name   inflected
-	Fields []fieldDef
-}
-
-func ParseModel(filePath string) *ModelDef {
+func ParseModel(filePath string) *visitor {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, filePath, nil, 0)
 	if err != nil {
@@ -32,18 +21,9 @@ func ParseModel(filePath string) *ModelDef {
 	}
 
 	v := &visitor{}
-
 	ast.Walk(v, file)
 
-	m := &ModelDef{
-		Name: inflected{
-			Sigular: v.EntityName,
-			Plural:  inflect.Pluralize(v.EntityName),
-		},
-		Fields: v.Fields,
-	}
-
-	return m
+	return v
 }
 
 type visitor struct {

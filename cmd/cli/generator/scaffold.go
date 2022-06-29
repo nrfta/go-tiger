@@ -13,9 +13,9 @@ var scaffoldCmd = &cobra.Command{
 	Short: "Generates a scaffold file",
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		file := path.Join(helpers.FindRootPath(), args[0])
+		rootPath := helpers.FindRootPath()
 
-		scaffolding.Process(file)
+		scaffolding.Process(rootPath, path.Join(rootPath, args[0]))
 	},
 }
 
