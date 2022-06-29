@@ -2,11 +2,11 @@ package scaffolding
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
+	"strings"
 	"text/template"
 
 	"github.com/iancoleman/strcase"
@@ -48,16 +48,18 @@ type Generator struct {
 	Data *Data
 }
 
-func (g *Generator) createPkgFolder() {
+func (g *Generator) createPkgFolder() string {
 	p := path.Join(g.Root, "pkg", g.Data.PkgName)
 
 	if err := os.MkdirAll(p, os.ModePerm); err != nil {
 		log.Fatal(err)
 	}
+
+	return p
 }
 
 func (g *Generator) CreatePkg() {
-	g.createPkgFolder()
+	pkgPath := g.createPkgFolder()
 
 	files, err := blueprints.F.ReadDir("pkg")
 	if err != nil {
@@ -82,8 +84,16 @@ func (g *Generator) CreatePkg() {
 				log.Fatal(err)
 			}
 
-			fmt.Println(*rendered)
+			destFileName := strings.ReplaceAll(
+				strings.ReplaceAll(file.Name(), ".tpl", ""),
+				"pkgName",
+				g.Data.PkgName,
+			)
 
+			err = os.WriteFile(path.Join(pkgPath, destFileName), []byte(*rendered), 0755)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 
@@ -99,11 +109,63 @@ func getModuleName(rootPath string) string {
 }
 
 var funcMap template.FuncMap = template.FuncMap{
-	"ToSnake":      strcase.ToSnake,
-	"ToCamel":      strcase.ToCamel,
-	"ToLowerCamel": strcase.ToLowerCamel,
+	"ToLowerCamel":  strcase.ToLowerCamel,
+	"GraphqlFields": GraphqlFields,
+	"GraphqlField":  GraphqlField,
 }
 
+var mapGQLTypes = map[string]string{
+	"string":            "String!",
+	"bool":              "Boolean!",
+	"null.String":       "String",
+	"time.Time":         "DateTime!",
+	"null.Time":         "DateTime",
+	"types.StringArray": "[String!]!",
+}
+
+func GraphqlField(field fieldDef, mustBeOptional bool) string {
+	n := field.Name
+	t, found := mapGQLTypes[field.Type]
+	if !found {
+		t = "TODO # " + field.Type
+	}
+
+	if strings.HasSuffix(strings.ToLower(n), "id") && t == "String!" {
+		t = "ID!"
+	}
+
+	if mustBeOptional {
+		t = strings.TrimSuffix(t, "!")
+	}
+
+	return n + ": " + t
+}
+
+func GraphqlFields(
+	fields []fieldDef,
+	skipReadOnly bool,
+) []fieldDef {
+	var result []fieldDef
+
+	for _, field := range fields {
+		if skipReadOnly &&
+			(field.Name == "ID" ||
+				field.Name == "CreatedAt" ||
+				field.Name == "UpdatedAt") {
+			continue
+		}
+
+		result = append(
+			result,
+			fieldDef{
+				Name: strcase.ToLowerCamel(strings.ReplaceAll(field.Name, "ID", "Id")),
+				Type: field.Type,
+			},
+		)
+	}
+
+	return result
+}
 func renderTemplate(
 	name string,
 	input string,
