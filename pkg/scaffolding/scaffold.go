@@ -109,9 +109,10 @@ func getModuleName(rootPath string) string {
 }
 
 var funcMap template.FuncMap = template.FuncMap{
-	"ToLowerCamel":  strcase.ToLowerCamel,
-	"GraphqlFields": GraphqlFields,
-	"GraphqlField":  GraphqlField,
+	"ToLowerCamel":    strcase.ToLowerCamel,
+	"GraphqlFields":   GraphqlFields,
+	"GraphqlField":    GraphqlField,
+	"isReadOnlyField": isReadOnlyField,
 }
 
 var mapGQLTypes = map[string]string{
@@ -141,6 +142,12 @@ func GraphqlField(field fieldDef, mustBeOptional bool) string {
 	return n + ": " + t
 }
 
+func isReadOnlyField(name string) bool {
+	return (name == "ID" ||
+		name == "CreatedAt" ||
+		name == "UpdatedAt")
+}
+
 func GraphqlFields(
 	fields []fieldDef,
 	skipReadOnly bool,
@@ -148,10 +155,7 @@ func GraphqlFields(
 	var result []fieldDef
 
 	for _, field := range fields {
-		if skipReadOnly &&
-			(field.Name == "ID" ||
-				field.Name == "CreatedAt" ||
-				field.Name == "UpdatedAt") {
+		if skipReadOnly && isReadOnlyField(field.Name) {
 			continue
 		}
 
