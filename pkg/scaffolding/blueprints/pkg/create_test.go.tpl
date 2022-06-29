@@ -14,6 +14,7 @@ import (
 var _ = Describe("{{.NamePlural}} Service Test", func() {
 	Describe("#Create", func() {
 		input := gql_types.{{.Name}}CreateInput{
+      // TODO
       {{ range $index, $field := .Fields }}{{if not (isReadOnlyField $field.Name)}}// {{$field.Name}}: {{$field.Type}},{{end}}
       {{ end }}
 		}
