@@ -1,7 +1,9 @@
 package scaffolding
 
 import (
+	"bufio"
 	"bytes"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -35,6 +37,8 @@ func Process(rootPath, filePath string) {
 	g.CreatePkg()
 	g.CreateFactory()
 	g.CreateResolver()
+	g.AddGraphqlQueries()
+	g.AddGraphqlMutations()
 }
 
 type Data struct {
@@ -101,6 +105,73 @@ func (g *Generator) CreatePkg() {
 				log.Fatal(err)
 			}
 		}
+	}
+}
+
+func (g *Generator) AddGraphqlQueries() {
+	g.appendTemplateToFile("misc/query.graphql.tpl", "pkg/schemas/query.graphql")
+}
+
+func (g *Generator) AddGraphqlMutations() {
+	g.appendTemplateToFile("misc/mutation.graphql.tpl", "pkg/schemas/mutation.graphql")
+}
+
+func (g *Generator) appendTemplateToFile(templatePath string, filePathToAppend string) {
+	var file, err = os.OpenFile(
+		path.Join(g.Root, filePathToAppend),
+		os.O_RDWR,
+		os.ModePerm,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+
+	lastLineSize := 0
+	for {
+		line, _, err := reader.ReadLine()
+		if err == io.EOF {
+			break
+		}
+
+		lastLineSize = len(line)
+	}
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+	offset := fileInfo.Size() - int64(lastLineSize+1)
+
+	content, err := blueprints.F.ReadFile(templatePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rendered, err := renderTemplate(
+		"template",
+		string(content),
+		g.Data,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = file.WriteAt(
+		[]byte(*rendered),
+		offset,
+	)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Save file changes.
+	err = file.Sync()
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 

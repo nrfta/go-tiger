@@ -10,6 +10,13 @@ import (
 	"github.com/nrfta/go-paging"
 )
 
+func (r *queryResolver) {{.Name}}ByID(
+	ctx context.Context,
+	id string,
+) (*models.{{.Name}}, error) {
+	return r.Services.{{.Name}}.Get(ctx, id)
+}
+
 func (r *queryResolver) {{.NamePlural}}(
 	ctx context.Context,
 	page *paging.PageArgs,
