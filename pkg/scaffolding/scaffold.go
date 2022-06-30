@@ -34,6 +34,7 @@ func Process(rootPath, filePath string) {
 
 	g.CreatePkg()
 	g.CreateFactory()
+	g.CreateResolver()
 }
 
 type Data struct {
@@ -123,6 +124,36 @@ func (g *Generator) CreateFactory() {
 			g.Root,
 			"tests",
 			"factories",
+			strcase.ToSnake(g.Data.Name)+".go",
+		),
+		[]byte(*rendered),
+		os.ModePerm,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (g *Generator) CreateResolver() {
+	content, err := blueprints.F.ReadFile("misc/resolver.go.tpl")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rendered, err := renderTemplate(
+		"resolver.go",
+		string(content),
+		g.Data,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = os.WriteFile(
+		path.Join(
+			g.Root,
+			"pkg",
+			"resolvers",
 			strcase.ToSnake(g.Data.Name)+".go",
 		),
 		[]byte(*rendered),
