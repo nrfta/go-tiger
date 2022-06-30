@@ -20,7 +20,7 @@ var _ = Describe("{{.NamePlural}} Service Test", func() {
     {{ end }}
 		input := gql_types.{{.Name}}UpdateInput{
       // TODO
-      {{ range $index, $field := .Fields }}{{if not (isReadOnlyField $field.Name)}}// {{$field.Name}}: *{{ToLowerCamel $field.Name}},{{end}}
+      {{ range $index, $field := .Fields }}{{if not (isReadOnlyField $field.Name)}}// {{$field.Name}}: &{{ToLowerCamel $field.Name}},{{end}}
       {{ end }}
 		}
 

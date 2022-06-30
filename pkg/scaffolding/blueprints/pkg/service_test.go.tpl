@@ -49,6 +49,8 @@ var _ = Describe("{{.NamePlural}} Service Test", func() {
 			record1 = factories.Create(
 				DB,
 				factories.{{.Name}},
+
+				// factory.Use(false).For("SomeField"),
 			).(*models.{{.Name}})
 
 			record2 = factories.Create(
@@ -59,7 +61,6 @@ var _ = Describe("{{.NamePlural}} Service Test", func() {
 			record3 = factories.Create(
 				DB,
 				factories.{{.Name}},
-				factory.Use(false).For("IsEnabled"),
 			).(*models.{{.Name}})
 		})
 
