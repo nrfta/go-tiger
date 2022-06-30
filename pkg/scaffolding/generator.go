@@ -53,6 +53,7 @@ func Process(rootPath, filePath string) {
 	fmt.Println()
 	fmt.Println("What's Next?")
 	fmt.Println("  Manually Register the Service in pkg/resolvers/service_registry.go")
+	fmt.Println("  Add new pkg to autobind in gqlgen.yml")
 	fmt.Println("  Fix TODOs")
 	fmt.Println("  Implement Access Management")
 	fmt.Println("  Review generated GraphQL:")
@@ -124,7 +125,7 @@ func (g *Generator) appendTemplateToFile(templatePath string, filePathToAppend s
 	var file, err = os.OpenFile(
 		path.Join(g.Root, filePathToAppend),
 		os.O_RDWR,
-		os.ModePerm,
+		0644,
 	)
 	if err != nil {
 		log.Fatalf("Unable to read file to append (%s): %s", filePathToAppend, err.Error())
@@ -198,7 +199,7 @@ func (g *Generator) renderTemplateToFile(templatePath string, destFilePath strin
 	err = os.WriteFile(
 		path.Join(g.Root, destFilePath),
 		[]byte(*rendered),
-		os.ModePerm,
+		0644,
 	)
 	if err != nil {
 		log.Fatalf("Unable to write file (%s): %s", destFilePath, err.Error())
@@ -210,7 +211,7 @@ func (g *Generator) renderTemplateToFile(templatePath string, destFilePath strin
 func (g *Generator) createPkgFolder() string {
 	p := "pkg/" + g.Data.PkgName
 
-	if err := os.MkdirAll(path.Join(g.Root, p), os.ModePerm); err != nil {
+	if err := os.MkdirAll(path.Join(g.Root, p), 0644); err != nil {
 		log.Fatalf("Unable to folder (%s): %s", p, err.Error())
 	}
 
