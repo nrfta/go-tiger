@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
-	"github.com/nrfta/go-tiger/pkg/scaffolding/blueprints"
+	"github.com/nrfta/go-tiger/pkg/generators/blueprints"
 	"github.com/volatiletech/inflect"
 	"golang.org/x/mod/modfile"
 )
@@ -81,9 +81,9 @@ type Generator struct {
 func (g *Generator) CreatePkg() {
 	pkgPath := g.createPkgFolder()
 
-	files, err := blueprints.F.ReadDir("pkg")
+	files, err := blueprints.F.ReadDir("scaffold/pkg")
 	if err != nil {
-		log.Fatalf("Unable to read template dir (pkg): %s", err.Error())
+		log.Fatalf("Unable to read template dir (scaffold/pkg): %s", err.Error())
 	}
 
 	for _, file := range files {
@@ -94,31 +94,31 @@ func (g *Generator) CreatePkg() {
 				g.Data.PkgName,
 			)
 
-			g.renderTemplateToFile("pkg/"+file.Name(), pkgPath+"/"+destFileName)
+			g.renderTemplateToFile("scaffold/pkg/"+file.Name(), pkgPath+"/"+destFileName)
 		}
 	}
 }
 
 func (g *Generator) CreateFactory() {
 	g.renderTemplateToFile(
-		"misc/factory.go.tpl",
+		"scaffold/misc/factory.go.tpl",
 		"tests/factories/"+strcase.ToSnake(g.Data.Name)+".go",
 	)
 }
 
 func (g *Generator) CreateResolver() {
 	g.renderTemplateToFile(
-		"misc/resolver.go.tpl",
+		"scaffold/misc/resolver.go.tpl",
 		"pkg/resolvers/"+strcase.ToSnake(g.Data.Name)+".go",
 	)
 }
 
 func (g *Generator) AddGraphqlQueries() {
-	g.appendTemplateToFile("misc/query.graphql.tpl", "pkg/schemas/query.graphql")
+	g.appendTemplateToFile("scaffold/misc/query.graphql.tpl", "pkg/schemas/query.graphql")
 }
 
 func (g *Generator) AddGraphqlMutations() {
-	g.appendTemplateToFile("misc/mutation.graphql.tpl", "pkg/schemas/mutation.graphql")
+	g.appendTemplateToFile("scaffold/misc/mutation.graphql.tpl", "pkg/schemas/mutation.graphql")
 }
 
 func (g *Generator) appendTemplateToFile(templatePath string, filePathToAppend string) {

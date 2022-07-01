@@ -3,5 +3,5 @@ package blueprints
 import "embed"
 
 // Blueprints used for scaffoling
-//go:embed pkg misc
+//go:embed scaffold
 var F embed.FS

@@ -4,7 +4,7 @@ import (
 	"path"
 
 	"github.com/nrfta/go-tiger/helpers"
-	"github.com/nrfta/go-tiger/pkg/scaffolding"
+	"github.com/nrfta/go-tiger/pkg/generators/scaffolding"
 	"github.com/spf13/cobra"
 )
 
