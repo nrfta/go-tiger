@@ -1,9 +1,7 @@
 package scaffolding
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,10 +9,15 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
+	"github.com/nrfta/go-tiger/pkg/generators"
 	"github.com/nrfta/go-tiger/pkg/generators/blueprints"
 	"github.com/volatiletech/inflect"
 	"golang.org/x/mod/modfile"
 )
+
+type Scaffold struct {
+	Gen *generators.Generator[*Data]
+}
 
 func Process(rootPath, filePath string) {
 	m := ParseModel(filePath)
@@ -28,26 +31,21 @@ func Process(rootPath, filePath string) {
 		Fields:     m.Fields,
 	}
 
-	g := &Generator{
-		Root: rootPath,
-		Data: data,
+	s := &Scaffold{
+		Gen: generators.NewGenerator(
+			rootPath,
+			data,
+			funcMap,
+		),
 	}
 
-	g.CreatePkg()
-	g.CreateFactory()
-	g.CreateResolver()
-	g.AddGraphqlQueries()
-	g.AddGraphqlMutations()
+	s.CreatePkg()
+	s.CreateFactory()
+	s.CreateResolver()
+	s.AddGraphqlQueries()
+	s.AddGraphqlMutations()
 
-	fmt.Println("Created:")
-	for _, file := range g.createdFiles {
-		fmt.Println("  " + file)
-	}
-
-	fmt.Println("Modified:")
-	for _, file := range g.modifiedFiles {
-		fmt.Println("  " + file)
-	}
+	s.Gen.PrintSummary()
 
 	fmt.Println()
 	fmt.Println()
@@ -70,16 +68,8 @@ type Data struct {
 	Fields     []fieldDef
 }
 
-type Generator struct {
-	Root string
-	Data *Data
-
-	createdFiles  []string
-	modifiedFiles []string
-}
-
-func (g *Generator) CreatePkg() {
-	pkgPath := g.createPkgFolder()
+func (s *Scaffold) CreatePkg() {
+	pkgPath := s.createPkgFolder()
 
 	files, err := blueprints.F.ReadDir("scaffold/pkg")
 	if err != nil {
@@ -91,127 +81,40 @@ func (g *Generator) CreatePkg() {
 			destFileName := strings.ReplaceAll(
 				strings.ReplaceAll(file.Name(), ".tpl", ""),
 				"pkgName",
-				g.Data.PkgName,
+				s.Gen.Data.PkgName,
 			)
 
-			g.renderTemplateToFile("scaffold/pkg/"+file.Name(), pkgPath+"/"+destFileName)
+			s.Gen.RenderTemplateToFile("scaffold/pkg/"+file.Name(), pkgPath+"/"+destFileName)
 		}
 	}
 }
 
-func (g *Generator) CreateFactory() {
-	g.renderTemplateToFile(
+func (g *Scaffold) CreateFactory() {
+	g.Gen.RenderTemplateToFile(
 		"scaffold/misc/factory.go.tpl",
-		"tests/factories/"+strcase.ToSnake(g.Data.Name)+".go",
+		"tests/factories/"+strcase.ToSnake(g.Gen.Data.Name)+".go",
 	)
 }
 
-func (g *Generator) CreateResolver() {
-	g.renderTemplateToFile(
+func (g *Scaffold) CreateResolver() {
+	g.Gen.RenderTemplateToFile(
 		"scaffold/misc/resolver.go.tpl",
-		"pkg/resolvers/"+strcase.ToSnake(g.Data.Name)+".go",
+		"pkg/resolvers/"+strcase.ToSnake(g.Gen.Data.Name)+".go",
 	)
 }
 
-func (g *Generator) AddGraphqlQueries() {
-	g.appendTemplateToFile("scaffold/misc/query.graphql.tpl", "pkg/schemas/query.graphql")
+func (g *Scaffold) AddGraphqlQueries() {
+	g.Gen.AppendTemplateToFile("scaffold/misc/query.graphql.tpl", "pkg/schemas/query.graphql")
 }
 
-func (g *Generator) AddGraphqlMutations() {
-	g.appendTemplateToFile("scaffold/misc/mutation.graphql.tpl", "pkg/schemas/mutation.graphql")
+func (g *Scaffold) AddGraphqlMutations() {
+	g.Gen.AppendTemplateToFile("scaffold/misc/mutation.graphql.tpl", "pkg/schemas/mutation.graphql")
 }
 
-func (g *Generator) appendTemplateToFile(templatePath string, filePathToAppend string) {
-	var file, err = os.OpenFile(
-		path.Join(g.Root, filePathToAppend),
-		os.O_RDWR,
-		0644,
-	)
-	if err != nil {
-		log.Fatalf("Unable to read file to append (%s): %s", filePathToAppend, err.Error())
-	}
-	defer file.Close()
+func (g *Scaffold) createPkgFolder() string {
+	p := "pkg/" + g.Gen.Data.PkgName
 
-	reader := bufio.NewReader(file)
-
-	lastLineSize := 0
-	for {
-		line, _, err := reader.ReadLine()
-		if err == io.EOF {
-			break
-		}
-
-		lastLineSize = len(line)
-	}
-
-	fileInfo, err := file.Stat()
-	if err != nil {
-		log.Fatalf("Unable to get file stat (%s): %s", filePathToAppend, err.Error())
-	}
-	offset := fileInfo.Size() - int64(lastLineSize+1)
-
-	content, err := blueprints.F.ReadFile(templatePath)
-	if err != nil {
-		log.Fatalf("Unable to read template (%s): %s", templatePath, err.Error())
-	}
-
-	rendered, err := renderTemplate(
-		"template",
-		string(content),
-		g.Data,
-	)
-	if err != nil {
-		log.Fatalf("Unable to render template (%s): %s", templatePath, err.Error())
-	}
-
-	_, err = file.WriteAt(
-		[]byte(*rendered),
-		offset,
-	)
-	if err != nil {
-		log.Fatalf("Unable to write at the end of the file (%s): %s", filePathToAppend, err.Error())
-	}
-
-	// Save file changes.
-	err = file.Sync()
-	if err != nil {
-		log.Fatalf("Unable to save the file (%s): %s", filePathToAppend, err.Error())
-	}
-
-	g.modifiedFiles = append(g.modifiedFiles, filePathToAppend)
-}
-
-func (g *Generator) renderTemplateToFile(templatePath string, destFilePath string) {
-	content, err := blueprints.F.ReadFile(templatePath)
-	if err != nil {
-		log.Fatalf("Unable to read template file (%s): %s", templatePath, err.Error())
-	}
-
-	rendered, err := renderTemplate(
-		templatePath,
-		string(content),
-		g.Data,
-	)
-	if err != nil {
-		log.Fatalf("Unable to render template (%s): %s", templatePath, err.Error())
-	}
-
-	err = os.WriteFile(
-		path.Join(g.Root, destFilePath),
-		[]byte(*rendered),
-		0644,
-	)
-	if err != nil {
-		log.Fatalf("Unable to write file (%s): %s", destFilePath, err.Error())
-	}
-
-	g.createdFiles = append(g.createdFiles, destFilePath)
-}
-
-func (g *Generator) createPkgFolder() string {
-	p := "pkg/" + g.Data.PkgName
-
-	if err := os.MkdirAll(path.Join(g.Root, p), 0644); err != nil {
+	if err := os.MkdirAll(path.Join(g.Gen.Root, p), 0644); err != nil {
 		log.Fatalf("Unable to folder (%s): %s", p, err.Error())
 	}
 
