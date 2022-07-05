@@ -7,6 +7,7 @@ require (
 	github.com/gobuffalo/here v0.6.6
 	github.com/gobuffalo/packr v1.30.1
 	github.com/golang-migrate/migrate/v4 v4.15.2
+	github.com/iancoleman/strcase v0.2.0
 	github.com/lib/pq v1.10.6
 	github.com/markbates/grift v1.5.0
 	github.com/neighborly/go-config v0.3.1
@@ -14,6 +15,8 @@ require (
 	github.com/neighborly/go-pghelpers v0.9.0
 	github.com/nrfta/go-log v0.9.1
 	github.com/spf13/cobra v1.5.0
+	github.com/volatiletech/inflect v0.0.1
+	golang.org/x/mod v0.5.1
 )
 
 require (
@@ -47,6 +50,7 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/sys v0.0.0-20220317061510-51cd9980dadf // indirect
 	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
 	gopkg.in/ini.v1 v1.51.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
