@@ -42,6 +42,7 @@ func Process(rootPath, filePath string) {
 	s.CreatePkg()
 	s.CreateFactory()
 	s.CreateResolver()
+	s.CreateIntegrationTest()
 	s.AddGraphqlQueries()
 	s.AddGraphqlMutations()
 
@@ -100,6 +101,13 @@ func (g *Scaffold) CreateResolver() {
 	g.Gen.RenderTemplateToFile(
 		"scaffold/misc/resolver.go.tpl",
 		"pkg/resolvers/"+strcase.ToSnake(g.Gen.Data.Name)+".go",
+	)
+}
+
+func (g *Scaffold) CreateIntegrationTest() {
+	g.Gen.RenderTemplateToFile(
+		"scaffold/misc/integration_test.go.tpl",
+		"tests/integration/"+strcase.ToSnake(g.Gen.Data.Name)+"_test.go",
 	)
 }
 
