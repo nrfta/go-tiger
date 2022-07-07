@@ -24,10 +24,10 @@ var _ = Describe("{{.NamePlural}} Service Test", func() {
 		})
 
 		It("returns the record", func() {
-			record := factories.Create(
+			record := factories.Create[*models.{{.Name}}](
 				DB,
 				factories.{{.Name}},
-			).(*models.{{.Name}})
+			)
 
 			result, err := subject.Get(context.Background(), record.ID)
 			Expect(err).To(Succeed())
@@ -46,22 +46,22 @@ var _ = Describe("{{.NamePlural}} Service Test", func() {
 		BeforeEach(func() {
 			ctx = context.Background()
 
-			record1 = factories.Create(
+			record1 = factories.Create[*models.{{.Name}}](
 				DB,
 				factories.{{.Name}},
 
 				// factory.Use(false).For("SomeField"),
-			).(*models.{{.Name}})
+			)
 
-			record2 = factories.Create(
+			record2 = factories.Create[*models.{{.Name}}](
 				DB,
 				factories.{{.Name}},
-			).(*models.{{.Name}})
+			)
 
-			record3 = factories.Create(
+			record3 = factories.Create[*models.{{.Name}}](
 				DB,
 				factories.{{.Name}},
-			).(*models.{{.Name}})
+			)
 		})
 
 		Describe("#GetAllPaginated", func() {
@@ -72,7 +72,7 @@ var _ = Describe("{{.NamePlural}} Service Test", func() {
 				)
 				records, err := subject.GetAllPaginated(context.Background(), nil, mods...)
 				Expect(err).To(Succeed())
-				Expect(len(records.Edges)).To(Equal(0))
+				Expect(records.Edges).To(HaveLen(0))
 			})
 
 			It("should return all records, paginated", func() {
@@ -82,7 +82,7 @@ var _ = Describe("{{.NamePlural}} Service Test", func() {
 					&paging.PageArgs{First: &limit},
 				)
 				Expect(err).To(Succeed())
-				Expect(len(result.Edges)).To(Equal(2))
+				Expect(result.Edges).To(HaveLen(2))
 
 				count, _ := result.PageInfo.TotalCount()
 				Expect(*count).To(Equal(3))

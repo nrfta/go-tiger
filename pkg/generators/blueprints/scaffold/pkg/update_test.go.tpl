@@ -27,14 +27,14 @@ var _ = Describe("{{.NamePlural}} Service Test", func() {
 		var record *models.{{.Name}}
 
 		BeforeEach(func() {
-			record = factories.Create(
+			record = factories.Create[*models.{{.Name}}](
 				DB,
 				factories.{{.Name}},
 
         // TODO
         {{ range $index, $field := .Fields }}{{if not (isReadOnlyField $field.Name)}}// factory.Use({{$field.Type}}).For("{{$field.Name}}"),{{end}}
         {{ end }}
-			).(*models.{{.Name}})
+			)
 		})
 
 		PIt("fails to update due to missing permission", func() {
