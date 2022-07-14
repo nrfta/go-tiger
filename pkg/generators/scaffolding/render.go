@@ -16,6 +16,7 @@ var funcMap template.FuncMap = template.FuncMap{
 
 var mapGQLTypes = map[string]string{
 	"string":            "String!",
+	"int":               "Int!",
 	"bool":              "Boolean!",
 	"null.String":       "String",
 	"time.Time":         "DateTime!",
