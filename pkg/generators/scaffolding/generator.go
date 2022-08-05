@@ -107,7 +107,7 @@ func (g *Scaffold) CreateResolver() {
 func (g *Scaffold) CreateIntegrationTest() {
 	g.Gen.RenderTemplateToFile(
 		"scaffold/misc/integration_test.go.tpl",
-		"tests/integration/"+strcase.ToSnake(g.Gen.Data.Name)+"_test.go",
+		"tests/integration/"+strcase.ToSnake(g.Gen.Data.NamePlural)+"_test.go",
 	)
 }
 
