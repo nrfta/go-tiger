@@ -8,7 +8,6 @@ import (
 	"{{.ModuleName}}/tests/factories"
 
 	"github.com/google/uuid"
-	"github.com/kolach/go-factory"
 	"github.com/nrfta/go-paging"
 
 	. "github.com/onsi/ginkgo"

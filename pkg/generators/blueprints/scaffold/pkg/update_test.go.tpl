@@ -1,6 +1,8 @@
 package {{.PkgName}}_test
 
 import (
+	"context"
+
 	"{{.ModuleName}}/pkg/gql_types"
 	"{{.ModuleName}}/pkg/models"
 	"{{.ModuleName}}/tests"
@@ -15,16 +17,26 @@ import (
 
 var _ = Describe("{{.NamePlural}} Service Test", func() {
 	Describe("#Update", func() {
-    // TODO
-    {{ range $index, $field := .Fields }}{{if not (isReadOnlyField $field.Name)}}// {{ToLowerCamel $field.Name}} := {{$field.Type}}{{end}}
-    {{ end }}
-		input := gql_types.{{.Name}}UpdateInput{
-      // TODO
-      {{ range $index, $field := .Fields }}{{if not (isReadOnlyField $field.Name)}}// {{$field.Name}}: &{{ToLowerCamel $field.Name}},{{end}}
-      {{ end }}
-		}
-
+		var ctx context.Context
+		var input gql_types.{{.Name}}UpdateInput
 		var record *models.{{.Name}}
+
+		BeforeEach(func() {
+			ctx = tests.ContextWithCurrentUserInfo(
+				uuid.NewString(),
+				nil,
+				policy.IdentifiedDomains.SupportLevel3,
+			)
+
+      // TODO
+      {{ range $index, $field := .Fields }}{{if not (isReadOnlyField $field.Name)}}// {{ToLowerCamel $field.Name}} := {{$field.Type}}{{end}}
+      {{ end }}
+      input = gql_types.{{.Name}}UpdateInput{
+        // TODO
+        {{ range $index, $field := .Fields }}{{if not (isReadOnlyField $field.Name)}}// {{$field.Name}}: &{{ToLowerCamel $field.Name}},{{end}}
+        {{ end }}
+      }
+    })
 
 		BeforeEach(func() {
 			record = factories.Create[*models.{{.Name}}](
@@ -49,12 +61,6 @@ var _ = Describe("{{.NamePlural}} Service Test", func() {
 		})
 
 		It("updates the record", func() {
-			ctx := tests.ContextWithCurrentUserInfo(
-				uuid.NewString(),
-				nil,
-				policy.IdentifiedDomains.SupportLevel3,
-			)
-
 			result, err := subject.Update(ctx, record.ID, input)
 			Expect(err).To(Succeed())
 
