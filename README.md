@@ -5,7 +5,7 @@ CLI for running migrations and generators in go apps.
 ## Installation
 
 ```sh
-go install github.com/nrfta/go-tiger/cmd/tiger
+go install github.com/nrfta/go-tiger/cmd/tiger@latest
 ```
 
 ## Usage
