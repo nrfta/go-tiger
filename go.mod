@@ -16,7 +16,7 @@ require (
 	github.com/nrfta/go-log v0.9.1
 	github.com/spf13/cobra v1.5.0
 	github.com/volatiletech/inflect v0.0.1
-	golang.org/x/mod v0.5.1
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
 )
 
 require (
@@ -50,8 +50,7 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
-	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
+	golang.org/x/text v0.3.8 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
