@@ -16,7 +16,7 @@ var migrationCmd = &cobra.Command{
 	Short: "Generates a migration file",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		t := time.Now()
+		t := time.Now().UTC()
 		timestamp := t.Format("20060102150405")
 		baseFileName := path.Join(helpers.FindRootPath(), "./db/migrations/"+timestamp+"_"+args[0])
 
