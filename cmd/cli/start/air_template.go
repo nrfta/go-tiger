@@ -6,7 +6,7 @@ func defaultAirConfig(appName string) string {
 	template := `
 [build]
   bin = "./bin/%s"
-  cmd = "go build -o ./bin/%s ."
+  cmd = "go build -gcflags=all=\"-N -l\" -o ./bin/%s ."
   exclude_dir = ["bin", "tests", "templates", "scripts", "db", "build", "tmp"]
 	exclude_regex = ["_test.go"]
   kill_delay = 500
