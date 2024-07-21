@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/cosmtrek/air/runner"
+	"github.com/air-verse/air/runner"
 	"github.com/nrfta/go-log"
 	"github.com/nrfta/go-tiger/helpers"
 	"github.com/spf13/cobra"
