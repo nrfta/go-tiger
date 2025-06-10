@@ -1,7 +1,6 @@
 package start
 
 import (
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path"
@@ -61,7 +60,7 @@ var StartCmd = &cobra.Command{
 			} else if os.IsNotExist(err) {
 				appName := helpers.LoadConfig().Meta.ServiceName
 
-				file, err := ioutil.TempFile(os.TempDir(), appName+".*.toml")
+				file, err := os.CreateTemp(os.TempDir(), appName+".*.toml")
 				if err != nil {
 					log.Fatal(err)
 				}
