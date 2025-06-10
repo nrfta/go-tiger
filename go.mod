@@ -1,7 +1,8 @@
 module github.com/nrfta/go-tiger
 
-go 1.22
-toolchain go1.22.10
+go 1.22.6
+
+toolchain go1.24.3
 
 require (
 	github.com/air-verse/air v1.52.3
