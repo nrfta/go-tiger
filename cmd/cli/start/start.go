@@ -1,16 +1,17 @@
 package start
 
 import (
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path"
 	"runtime"
 	"syscall"
 
-	"github.com/air-verse/air/runner"
-	"github.com/nrfta/go-log"
 	"github.com/nrfta/go-tiger/helpers"
+
+	"github.com/nrfta/go-log"
+
+	"github.com/air-verse/air/runner"
 	"github.com/spf13/cobra"
 )
 
@@ -59,7 +60,7 @@ var StartCmd = &cobra.Command{
 			} else if os.IsNotExist(err) {
 				appName := helpers.LoadConfig().Meta.ServiceName
 
-				file, err := ioutil.TempFile(os.TempDir(), appName+".*.toml")
+				file, err := os.CreateTemp(os.TempDir(), appName+".*.toml")
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -82,7 +83,7 @@ var StartCmd = &cobra.Command{
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 		var err error
-		r, err := runner.NewEngine(cfgPath, debugMode)
+		r, err := runner.NewEngine(cfgPath, map[string]runner.TomlInfo{}, debugMode)
 		if err != nil {
 			log.Fatal(err)
 			return
