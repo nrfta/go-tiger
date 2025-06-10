@@ -8,9 +8,11 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/air-verse/air/runner"
-	"github.com/nrfta/go-log"
 	"github.com/nrfta/go-tiger/helpers"
+
+	"github.com/nrfta/go-log"
+
+	"github.com/air-verse/air/runner"
 	"github.com/spf13/cobra"
 )
 
@@ -82,7 +84,7 @@ var StartCmd = &cobra.Command{
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 		var err error
-		r, err := runner.NewEngine(cfgPath, debugMode)
+		r, err := runner.NewEngine(cfgPath, map[string]runner.TomlInfo{}, debugMode)
 		if err != nil {
 			log.Fatal(err)
 			return
